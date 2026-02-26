@@ -84,7 +84,13 @@
       return this.enabled;
     }
 
-    beep({ freq = 440, type = "sine", time = 0.12, gain = 0.08, slideTo = null } = {}) {
+    beep({
+      freq = 440,
+      type = "sine",
+      time = 0.12,
+      gain = 0.08,
+      slideTo = null,
+    } = {}) {
       if (!this.enabled) return;
       this.ensureContext();
       const t0 = this.ctx.currentTime;
@@ -106,7 +112,8 @@
       const n = Math.max(1, Math.floor(this.ctx.sampleRate * time));
       const buffer = this.ctx.createBuffer(1, n, this.ctx.sampleRate);
       const data = buffer.getChannelData(0);
-      for (let i = 0; i < n; i++) data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (n * 0.3));
+      for (let i = 0; i < n; i++)
+        data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (n * 0.3));
       const src = this.ctx.createBufferSource();
       src.buffer = buffer;
       const g = this.ctx.createGain();
@@ -116,20 +123,51 @@
     }
 
     // SFX
-    click() { this.beep({ freq: 700, type: "square", time: 0.06, gain: 0.04 }); }
-    spawn() { this.beep({ freq: 520, type: "triangle", time: 0.06, gain: 0.045 }); }
+    click() {
+      this.beep({ freq: 700, type: "square", time: 0.06, gain: 0.04 });
+    }
+    spawn() {
+      this.beep({ freq: 520, type: "triangle", time: 0.06, gain: 0.045 });
+    }
     correct() {
       this.beep({ freq: 740, type: "sine", time: 0.08, gain: 0.06 });
-      setTimeout(() => this.beep({ freq: 988, type: "sine", time: 0.08, gain: 0.06 }), 70);
+      setTimeout(
+        () => this.beep({ freq: 988, type: "sine", time: 0.08, gain: 0.06 }),
+        70,
+      );
     }
-    wrong() { this.beep({ freq: 220, type: "sawtooth", time: 0.12, gain: 0.06, slideTo: 140 }); }
-    landfillHit() { this.thud({ time: 0.15, gain: 0.07 }); }
+    wrong() {
+      this.beep({
+        freq: 220,
+        type: "sawtooth",
+        time: 0.12,
+        gain: 0.06,
+        slideTo: 140,
+      });
+    }
+    landfillHit() {
+      this.thud({ time: 0.15, gain: 0.07 });
+    }
     levelUp() {
       this.beep({ freq: 523, type: "sine", time: 0.15, gain: 0.07 });
-      setTimeout(() => this.beep({ freq: 659, type: "sine", time: 0.15, gain: 0.07 }), 100);
-      setTimeout(() => this.beep({ freq: 784, type: "sine", time: 0.2, gain: 0.07 }), 200);
+      setTimeout(
+        () => this.beep({ freq: 659, type: "sine", time: 0.15, gain: 0.07 }),
+        100,
+      );
+      setTimeout(
+        () => this.beep({ freq: 784, type: "sine", time: 0.2, gain: 0.07 }),
+        200,
+      );
     }
-    gameOver() { this.beep({ freq: 260, type: "sine", time: 0.25, gain: 0.08, slideTo: 120 }); }
+    gameOver() {
+      this.beep({
+        freq: 260,
+        type: "sine",
+        time: 0.25,
+        gain: 0.08,
+        slideTo: 120,
+      });
+    }
   }
   const SOUND = new SoundEngine();
 
@@ -144,34 +182,116 @@
 
   // ===== LEVEL CONFIGURATIONS =====
   const LEVELS = [
-    { level: 1, categories: ["recyclable", "organic"], fallSpeed: 7000, spawnRate: 2500, itemsToComplete: 15 },
-    { level: 2, categories: ["recyclable", "organic", "general"], fallSpeed: 5500, spawnRate: 2000, itemsToComplete: 20 },
-    { level: 3, categories: ["recyclable", "organic", "general", "hazardous"], fallSpeed: 4200, spawnRate: 1700, itemsToComplete: 25 },
-    { level: 4, categories: ["recyclable", "organic", "general", "hazardous", "glass"], fallSpeed: 3200, spawnRate: 1400, itemsToComplete: 30 },
-    { level: 5, categories: ["recyclable", "organic", "general", "hazardous", "glass", "electronic"], fallSpeed: 2400, spawnRate: 1200, itemsToComplete: 35 },
+    {
+      level: 1,
+      categories: ["recyclable", "organic"],
+      fallSpeed: 7000,
+      spawnRate: 2500,
+      itemsToComplete: 15,
+    },
+    {
+      level: 2,
+      categories: ["recyclable", "organic", "general"],
+      fallSpeed: 5500,
+      spawnRate: 2000,
+      itemsToComplete: 20,
+    },
+    {
+      level: 3,
+      categories: ["recyclable", "organic", "general", "hazardous"],
+      fallSpeed: 4200,
+      spawnRate: 1700,
+      itemsToComplete: 25,
+    },
+    {
+      level: 4,
+      categories: ["recyclable", "organic", "general", "hazardous", "glass"],
+      fallSpeed: 3200,
+      spawnRate: 1400,
+      itemsToComplete: 30,
+    },
+    {
+      level: 5,
+      categories: [
+        "recyclable",
+        "organic",
+        "general",
+        "hazardous",
+        "glass",
+        "electronic",
+      ],
+      fallSpeed: 2400,
+      spawnRate: 1200,
+      itemsToComplete: 35,
+    },
   ];
 
   // ===== WASTE DATABASE =====
   const WASTE_CATALOG = {
-    recyclable: { name: "Recyclable", icon: "♻️", items: [
-      { icon: "📄", name: "Paper" }, { icon: "🥫", name: "Can" }, { icon: "🧃", name: "Juice Box" },
-      { icon: "📦", name: "Cardboard" }, { icon: "📰", name: "Newspaper" }, { icon: "🍾", name: "Plastic Bottle" },
-    ]},
-    organic: { name: "Organic", icon: "🌱", items: [
-      { icon: "🍎", name: "Apple Core" }, { icon: "🍌", name: "Banana Peel" }, { icon: "🍃", name: "Leaves" },
-      { icon: "🥕", name: "Vegetable Scraps" }, { icon: "🍞", name: "Bread" }, { icon: "☕", name: "Coffee Grounds" },
-    ]},
-    general: { name: "General", icon: "🗑️", items: [
-      { icon: "🧦", name: "Old Cloth" }, { icon: "🧻", name: "Tissue" }, { icon: "🎈", name: "Balloon" },
-      { icon: "🧽", name: "Sponge" }, { icon: "🎨", name: "Markers" },
-    ]},
-    hazardous: { name: "Hazardous", icon: "⚠️", items: [
-      { icon: "🔋", name: "Battery" }, { icon: "🧪", name: "Chemicals" }, { icon: "💊", name: "Medicine" }, { icon: "🌡️", name: "Thermometer" },
-    ]},
-    glass: { name: "Glass", icon: "🍶", items: [ { icon: "🍷", name: "Wine Bottle" }, { icon: "🫙", name: "Jar" }, { icon: "🪟", name: "Window Glass" } ]},
-    electronic: { name: "Electronic", icon: "💻", items: [
-      { icon: "📱", name: "Phone" }, { icon: "⌨️", name: "Keyboard" }, { icon: "🖱️", name: "Mouse" }, { icon: "🎮", name: "Controller" },
-    ]},
+    recyclable: {
+      name: "Recyclable",
+      icon: "♻️",
+      items: [
+        { icon: "📄", name: "Paper" },
+        { icon: "🥫", name: "Can" },
+        { icon: "🧃", name: "Juice Box" },
+        { icon: "📦", name: "Cardboard" },
+        { icon: "📰", name: "Newspaper" },
+        { icon: "🍾", name: "Plastic Bottle" },
+      ],
+    },
+    organic: {
+      name: "Organic",
+      icon: "🌱",
+      items: [
+        { icon: "🍎", name: "Apple Core" },
+        { icon: "🍌", name: "Banana Peel" },
+        { icon: "🍃", name: "Leaves" },
+        { icon: "🥕", name: "Vegetable Scraps" },
+        { icon: "🍞", name: "Bread" },
+        { icon: "☕", name: "Coffee Grounds" },
+      ],
+    },
+    general: {
+      name: "General",
+      icon: "🗑️",
+      items: [
+        { icon: "🧦", name: "Old Cloth" },
+        { icon: "🧻", name: "Tissue" },
+        { icon: "🎈", name: "Balloon" },
+        { icon: "🧽", name: "Sponge" },
+        { icon: "🎨", name: "Markers" },
+      ],
+    },
+    hazardous: {
+      name: "Hazardous",
+      icon: "⚠️",
+      items: [
+        { icon: "🔋", name: "Battery" },
+        { icon: "🧪", name: "Chemicals" },
+        { icon: "💊", name: "Medicine" },
+        { icon: "🌡️", name: "Thermometer" },
+      ],
+    },
+    glass: {
+      name: "Glass",
+      icon: "🍶",
+      items: [
+        { icon: "🍷", name: "Wine Bottle" },
+        { icon: "🫙", name: "Jar" },
+        { icon: "🪟", name: "Window Glass" },
+      ],
+    },
+    electronic: {
+      name: "Electronic",
+      icon: "💻",
+      items: [
+        { icon: "📱", name: "Phone" },
+        { icon: "⌨️", name: "Keyboard" },
+        { icon: "🖱️", name: "Mouse" },
+        { icon: "🎮", name: "Controller" },
+      ],
+    },
   };
 
   // ===== TIPS =====
@@ -204,7 +324,12 @@
     lastUpdate: 0,
     tipIndex: 0,
     bins: [],
-    upgrades: { slowMotion: false, extraLife: false, recyclingEducation: false, binHighlight: false },
+    upgrades: {
+      slowMotion: false,
+      extraLife: false,
+      recyclingEducation: false,
+      binHighlight: false,
+    },
   };
 
   // Penalty state
@@ -269,7 +394,10 @@
       const bin = document.createElement("div");
       bin.className = `bin ${category}`;
       bin.dataset.category = category;
-      const examples = binData.items.slice(0, 3).map((item) => item.icon).join(" ");
+      const examples = binData.items
+        .slice(0, 3)
+        .map((item) => item.icon)
+        .join(" ");
       bin.innerHTML = `
         <div class="bin-icon">${binData.icon}</div>
         <div class="bin-label">${binData.name}</div>
@@ -284,9 +412,11 @@
   function spawnItem() {
     const levelConfig = LEVELS[GAME.currentLevel - 1];
     const categories = levelConfig.categories;
-    const randomCategory = categories[Math.floor(Math.random() * categories.length)];
+    const randomCategory =
+      categories[Math.floor(Math.random() * categories.length)];
     const categoryData = WASTE_CATALOG[randomCategory];
-    const randomItem = categoryData.items[Math.floor(Math.random() * categoryData.items.length)];
+    const randomItem =
+      categoryData.items[Math.floor(Math.random() * categoryData.items.length)];
 
     const item = document.createElement("div");
     item.className = "item";
@@ -294,7 +424,10 @@
     item.dataset.category = randomCategory;
     item.dataset.name = randomItem.name;
     item.setAttribute("role", "img");
-    item.setAttribute("aria-label", `${randomItem.name} (${WASTE_CATALOG[randomCategory].name})`);
+    item.setAttribute(
+      "aria-label",
+      `${randomItem.name} (${WASTE_CATALOG[randomCategory].name})`,
+    );
 
     const containerWidth = el.gameArea.offsetWidth;
     const x = random(20, containerWidth - 60);
@@ -325,7 +458,8 @@
   // ===== DRAG & DROP SYSTEM (Pointer Events + Capture) =====
   function enableDrag(itemObj) {
     const item = itemObj.element;
-    let offsetX = 0, offsetY = 0;
+    let offsetX = 0,
+      offsetY = 0;
     let pointerId = null;
 
     const onDown = (e) => {
@@ -338,7 +472,9 @@
 
       if (e.pointerId !== undefined && item.setPointerCapture) {
         pointerId = e.pointerId;
-        try { item.setPointerCapture(pointerId); } catch {}
+        try {
+          item.setPointerCapture(pointerId);
+        } catch {}
       }
 
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
@@ -376,14 +512,30 @@
       if (!itemObj.grabbed) return;
 
       if (pointerId !== null && item.releasePointerCapture) {
-        try { item.releasePointerCapture(pointerId); } catch {}
+        try {
+          item.releasePointerCapture(pointerId);
+        } catch {}
         pointerId = null;
       }
 
       // Check drop target
-      const itemRect = item.getBoundingClientRect();
-      const itemCenterX = itemRect.left + itemRect.width / 2;
-      const itemCenterY = itemRect.top + itemRect.height / 2;
+      // Use actual pointer/touch coordinates for accurate detection
+      let itemCenterX, itemCenterY;
+
+      if (e.changedTouches && e.changedTouches.length > 0) {
+        // On mobile touch, use the actual touch release position
+        itemCenterX = e.changedTouches[0].clientX;
+        itemCenterY = e.changedTouches[0].clientY;
+      } else if (e.clientX !== undefined && e.clientY !== undefined) {
+        // On desktop mouse, use the pointer release position
+        itemCenterX = e.clientX;
+        itemCenterY = e.clientY;
+      } else {
+        // Fallback to item's current position
+        const itemRect = item.getBoundingClientRect();
+        itemCenterX = itemRect.left + itemRect.width / 2;
+        itemCenterY = itemRect.top + itemRect.height / 2;
+      }
 
       let droppedOnBin = null;
       for (const binData of GAME.bins) {
@@ -500,7 +652,10 @@
     const levelConfig = LEVELS[GAME.currentLevel - 1];
     levelConfig.categories.forEach((category) => {
       const binData = WASTE_CATALOG[category];
-      const examples = binData.items.slice(0, 3).map((i) => i.icon).join(" ");
+      const examples = binData.items
+        .slice(0, 3)
+        .map((i) => i.icon)
+        .join(" ");
       const binItem = document.createElement("div");
       binItem.className = "penalty-bin-item";
       binItem.innerHTML = `
@@ -547,7 +702,10 @@
     // Clear remaining items
     GAME.items.slice().forEach((item) => removeItem(item));
 
-    const accuracy = Math.max(0, Math.round((GAME.itemsSorted / Math.max(1, GAME.totalItems)) * 100));
+    const accuracy = Math.max(
+      0,
+      Math.round((GAME.itemsSorted / Math.max(1, GAME.totalItems)) * 100),
+    );
     el.completedLevel.textContent = GAME.currentLevel;
     el.levelScore.textContent = GAME.score;
     el.itemsSorted.textContent = GAME.itemsSorted;
@@ -590,7 +748,11 @@
       el.highScore.textContent = GAME.highScore;
     }
 
-    highScores.push({ name: GAME.playerName, score: GAME.score, level: GAME.currentLevel });
+    highScores.push({
+      name: GAME.playerName,
+      score: GAME.score,
+      level: GAME.currentLevel,
+    });
     highScores.sort((a, b) => b.score - a.score);
     highScores = highScores.slice(0, 10);
 
@@ -692,7 +854,12 @@
     GAME.itemsSorted = 0;
     GAME.itemsMissed = 0;
     GAME.totalItems = 0;
-    GAME.upgrades = { slowMotion: false, extraLife: false, recyclingEducation: false, binHighlight: false };
+    GAME.upgrades = {
+      slowMotion: false,
+      extraLife: false,
+      recyclingEducation: false,
+      binHighlight: false,
+    };
 
     clearInterval(penaltyTimer);
     penaltyActive = false;
@@ -762,11 +929,26 @@
   }
 
   // ===== EVENT LISTENERS =====
-  el.btnStart.addEventListener("click", () => { SOUND.click(); startGame(); });
-  el.overlayStart.addEventListener("click", () => { SOUND.click(); startGame(); });
-  el.btnPause.addEventListener("click", () => { SOUND.click(); pauseGame(); });
-  el.btnUpgrades.addEventListener("click", () => { SOUND.click(); el.upgradePanel.classList.toggle("hidden"); });
-  el.closeUpgrades?.addEventListener("click", () => { SOUND.click(); el.upgradePanel.classList.add("hidden"); });
+  el.btnStart.addEventListener("click", () => {
+    SOUND.click();
+    startGame();
+  });
+  el.overlayStart.addEventListener("click", () => {
+    SOUND.click();
+    startGame();
+  });
+  el.btnPause.addEventListener("click", () => {
+    SOUND.click();
+    pauseGame();
+  });
+  el.btnUpgrades.addEventListener("click", () => {
+    SOUND.click();
+    el.upgradePanel.classList.toggle("hidden");
+  });
+  el.closeUpgrades?.addEventListener("click", () => {
+    SOUND.click();
+    el.upgradePanel.classList.add("hidden");
+  });
 
   el.btnMute.addEventListener("click", () => {
     const enabled = SOUND.toggle();
@@ -775,30 +957,58 @@
     if (enabled) SOUND.click();
   });
 
-  el.btnContinueLevel.addEventListener("click", () => { SOUND.click(); continueToNextLevel(); });
-  el.btnPlayAgain.addEventListener("click", () => { SOUND.click(); el.gameOverOverlay.classList.remove("active"); startGame(); });
-  el.btnMainMenu.addEventListener("click", () => { SOUND.click(); returnToMenu(); });
+  el.btnContinueLevel.addEventListener("click", () => {
+    SOUND.click();
+    continueToNextLevel();
+  });
+  el.btnPlayAgain.addEventListener("click", () => {
+    SOUND.click();
+    el.gameOverOverlay.classList.remove("active");
+    startGame();
+  });
+  el.btnMainMenu.addEventListener("click", () => {
+    SOUND.click();
+    returnToMenu();
+  });
 
   // Upgrade purchases
-  document.getElementById("upSlowMotion")?.addEventListener("click", () => purchaseUpgrade("slowMotion", 500));
-  document.getElementById("upExtraLife")?.addEventListener("click", () => purchaseUpgrade("extraLife", 800));
-  document.getElementById("upRecyclingEducation")?.addEventListener("click", () => purchaseUpgrade("recyclingEducation", 600));
-  document.getElementById("upBinHighlight")?.addEventListener("click", () => purchaseUpgrade("binHighlight", 400));
+  document
+    .getElementById("upSlowMotion")
+    ?.addEventListener("click", () => purchaseUpgrade("slowMotion", 500));
+  document
+    .getElementById("upExtraLife")
+    ?.addEventListener("click", () => purchaseUpgrade("extraLife", 800));
+  document
+    .getElementById("upRecyclingEducation")
+    ?.addEventListener("click", () =>
+      purchaseUpgrade("recyclingEducation", 600),
+    );
+  document
+    .getElementById("upBinHighlight")
+    ?.addEventListener("click", () => purchaseUpgrade("binHighlight", 400));
 
   // Keyboard shortcuts (1-6 for quick sorting) + pause
   window.addEventListener("keydown", (e) => {
     if (penaltyActive || GAME.paused || !GAME.running) {
-      if ((e.key === " " || e.key === "Escape") && GAME.running) { e.preventDefault(); pauseGame(); }
+      if ((e.key === " " || e.key === "Escape") && GAME.running) {
+        e.preventDefault();
+        pauseGame();
+      }
       return;
     }
 
     const keyMap = { 1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5 };
     if (keyMap[e.key] !== undefined && GAME.bins[keyMap[e.key]]) {
-      const nearestItem = GAME.items.filter((i) => !i.grabbed && !i.removed).sort((a, b) => b.y - a.y)[0];
+      const nearestItem = GAME.items
+        .filter((i) => !i.grabbed && !i.removed)
+        .sort((a, b) => b.y - a.y)[0];
       if (nearestItem) handleDrop(nearestItem, GAME.bins[keyMap[e.key]]);
     }
 
-    if (e.key === " " || e.key === "Escape") { e.preventDefault(); pauseGame(); }
+    if (e.key === " " || e.key === "Escape") {
+      e.preventDefault();
+      pauseGame();
+    }
   });
 
   // Rotate tips
