@@ -1,6 +1,6 @@
 // ========================================
-// ECO SORT 2 - Waste Management Game
-// Modern redesign with Web Audio API
+// ECO SORT 2 - Waste Management Game (Regenerated)
+// Drag & Drop fixed for desktop + mobile with Pointer Events
 // ========================================
 
 (() => {
@@ -73,7 +73,7 @@
       if (!this.ctx) {
         this.ctx = new (window.AudioContext || window.webkitAudioContext)();
       }
-      if (this.ctx.state === "suspended") {
+      if (this.ctx && this.ctx.state === "suspended") {
         this.ctx.resume();
       }
     }
@@ -84,29 +84,17 @@
       return this.enabled;
     }
 
-    beep({
-      freq = 440,
-      type = "sine",
-      time = 0.12,
-      gain = 0.08,
-      slideTo = null,
-    } = {}) {
+    beep({ freq = 440, type = "sine", time = 0.12, gain = 0.08, slideTo = null } = {}) {
       if (!this.enabled) return;
       this.ensureContext();
-
       const t0 = this.ctx.currentTime;
       const osc = this.ctx.createOscillator();
       const g = this.ctx.createGain();
-
       osc.type = type;
       osc.frequency.setValueAtTime(freq, t0);
-      if (slideTo) {
-        osc.frequency.linearRampToValueAtTime(slideTo, t0 + time);
-      }
-
+      if (slideTo) osc.frequency.linearRampToValueAtTime(slideTo, t0 + time);
       g.gain.setValueAtTime(gain, t0);
       g.gain.exponentialRampToValueAtTime(0.0001, t0 + time);
-
       osc.connect(g).connect(this.ctx.destination);
       osc.start(t0);
       osc.stop(t0 + time);
@@ -115,15 +103,10 @@
     thud({ time = 0.15, gain = 0.08 } = {}) {
       if (!this.enabled) return;
       this.ensureContext();
-
-      const bufferSize = Math.max(1, Math.floor(this.ctx.sampleRate * time));
-      const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+      const n = Math.max(1, Math.floor(this.ctx.sampleRate * time));
+      const buffer = this.ctx.createBuffer(1, n, this.ctx.sampleRate);
       const data = buffer.getChannelData(0);
-
-      for (let i = 0; i < bufferSize; i++) {
-        data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.3));
-      }
-
+      for (let i = 0; i < n; i++) data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (n * 0.3));
       const src = this.ctx.createBufferSource();
       src.buffer = buffer;
       const g = this.ctx.createGain();
@@ -132,59 +115,22 @@
       src.start();
     }
 
-    // Sound effects
-    click() {
-      this.beep({ freq: 700, type: "square", time: 0.06, gain: 0.04 });
-    }
-
-    spawn() {
-      this.beep({ freq: 520, type: "triangle", time: 0.06, gain: 0.045 });
-    }
-
+    // SFX
+    click() { this.beep({ freq: 700, type: "square", time: 0.06, gain: 0.04 }); }
+    spawn() { this.beep({ freq: 520, type: "triangle", time: 0.06, gain: 0.045 }); }
     correct() {
       this.beep({ freq: 740, type: "sine", time: 0.08, gain: 0.06 });
-      setTimeout(() => {
-        this.beep({ freq: 988, type: "sine", time: 0.08, gain: 0.06 });
-      }, 70);
+      setTimeout(() => this.beep({ freq: 988, type: "sine", time: 0.08, gain: 0.06 }), 70);
     }
-
-    wrong() {
-      this.beep({
-        freq: 220,
-        type: "sawtooth",
-        time: 0.12,
-        gain: 0.06,
-        slideTo: 140,
-      });
-    }
-
-    landfillHit() {
-      this.thud({ time: 0.15, gain: 0.07 });
-    }
-
+    wrong() { this.beep({ freq: 220, type: "sawtooth", time: 0.12, gain: 0.06, slideTo: 140 }); }
+    landfillHit() { this.thud({ time: 0.15, gain: 0.07 }); }
     levelUp() {
       this.beep({ freq: 523, type: "sine", time: 0.15, gain: 0.07 });
-      setTimeout(
-        () => this.beep({ freq: 659, type: "sine", time: 0.15, gain: 0.07 }),
-        100,
-      );
-      setTimeout(
-        () => this.beep({ freq: 784, type: "sine", time: 0.2, gain: 0.07 }),
-        200,
-      );
+      setTimeout(() => this.beep({ freq: 659, type: "sine", time: 0.15, gain: 0.07 }), 100);
+      setTimeout(() => this.beep({ freq: 784, type: "sine", time: 0.2, gain: 0.07 }), 200);
     }
-
-    gameOver() {
-      this.beep({
-        freq: 260,
-        type: "sine",
-        time: 0.25,
-        gain: 0.08,
-        slideTo: 120,
-      });
-    }
+    gameOver() { this.beep({ freq: 260, type: "sine", time: 0.25, gain: 0.08, slideTo: 120 }); }
   }
-
   const SOUND = new SoundEngine();
 
   // ===== GAME CONFIGURATION =====
@@ -198,116 +144,34 @@
 
   // ===== LEVEL CONFIGURATIONS =====
   const LEVELS = [
-    {
-      level: 1,
-      categories: ["recyclable", "organic"],
-      fallSpeed: 7000,
-      spawnRate: 2500,
-      itemsToComplete: 15,
-    },
-    {
-      level: 2,
-      categories: ["recyclable", "organic", "general"],
-      fallSpeed: 5500,
-      spawnRate: 2000,
-      itemsToComplete: 20,
-    },
-    {
-      level: 3,
-      categories: ["recyclable", "organic", "general", "hazardous"],
-      fallSpeed: 4200,
-      spawnRate: 1700,
-      itemsToComplete: 25,
-    },
-    {
-      level: 4,
-      categories: ["recyclable", "organic", "general", "hazardous", "glass"],
-      fallSpeed: 3200,
-      spawnRate: 1400,
-      itemsToComplete: 30,
-    },
-    {
-      level: 5,
-      categories: [
-        "recyclable",
-        "organic",
-        "general",
-        "hazardous",
-        "glass",
-        "electronic",
-      ],
-      fallSpeed: 2400,
-      spawnRate: 1200,
-      itemsToComplete: 35,
-    },
+    { level: 1, categories: ["recyclable", "organic"], fallSpeed: 7000, spawnRate: 2500, itemsToComplete: 15 },
+    { level: 2, categories: ["recyclable", "organic", "general"], fallSpeed: 5500, spawnRate: 2000, itemsToComplete: 20 },
+    { level: 3, categories: ["recyclable", "organic", "general", "hazardous"], fallSpeed: 4200, spawnRate: 1700, itemsToComplete: 25 },
+    { level: 4, categories: ["recyclable", "organic", "general", "hazardous", "glass"], fallSpeed: 3200, spawnRate: 1400, itemsToComplete: 30 },
+    { level: 5, categories: ["recyclable", "organic", "general", "hazardous", "glass", "electronic"], fallSpeed: 2400, spawnRate: 1200, itemsToComplete: 35 },
   ];
 
   // ===== WASTE DATABASE =====
   const WASTE_CATALOG = {
-    recyclable: {
-      name: "Recyclable",
-      icon: "♻️",
-      items: [
-        { icon: "📄", name: "Paper" },
-        { icon: "🥫", name: "Can" },
-        { icon: "🧃", name: "Juice Box" },
-        { icon: "📦", name: "Cardboard" },
-        { icon: "📰", name: "Newspaper" },
-        { icon: "🍾", name: "Plastic Bottle" },
-      ],
-    },
-    organic: {
-      name: "Organic",
-      icon: "🌱",
-      items: [
-        { icon: "🍎", name: "Apple Core" },
-        { icon: "🍌", name: "Banana Peel" },
-        { icon: "🍃", name: "Leaves" },
-        { icon: "🥕", name: "Vegetable Scraps" },
-        { icon: "🍞", name: "Bread" },
-        { icon: "☕", name: "Coffee Grounds" },
-      ],
-    },
-    general: {
-      name: "General",
-      icon: "🗑️",
-      items: [
-        { icon: "🧦", name: "Old Cloth" },
-        { icon: "🧻", name: "Tissue" },
-        { icon: "🎈", name: "Balloon" },
-        { icon: "🧽", name: "Sponge" },
-        { icon: "🎨", name: "Markers" },
-      ],
-    },
-    hazardous: {
-      name: "Hazardous",
-      icon: "⚠️",
-      items: [
-        { icon: "🔋", name: "Battery" },
-        { icon: "🧪", name: "Chemicals" },
-        { icon: "💊", name: "Medicine" },
-        { icon: "🌡️", name: "Thermometer" },
-      ],
-    },
-    glass: {
-      name: "Glass",
-      icon: "🍶",
-      items: [
-        { icon: "🍷", name: "Wine Bottle" },
-        { icon: "🫙", name: "Jar" },
-        { icon: "🪟", name: "Window Glass" },
-      ],
-    },
-    electronic: {
-      name: "Electronic",
-      icon: "💻",
-      items: [
-        { icon: "📱", name: "Phone" },
-        { icon: "⌨️", name: "Keyboard" },
-        { icon: "🖱️", name: "Mouse" },
-        { icon: "🎮", name: "Controller" },
-      ],
-    },
+    recyclable: { name: "Recyclable", icon: "♻️", items: [
+      { icon: "📄", name: "Paper" }, { icon: "🥫", name: "Can" }, { icon: "🧃", name: "Juice Box" },
+      { icon: "📦", name: "Cardboard" }, { icon: "📰", name: "Newspaper" }, { icon: "🍾", name: "Plastic Bottle" },
+    ]},
+    organic: { name: "Organic", icon: "🌱", items: [
+      { icon: "🍎", name: "Apple Core" }, { icon: "🍌", name: "Banana Peel" }, { icon: "🍃", name: "Leaves" },
+      { icon: "🥕", name: "Vegetable Scraps" }, { icon: "🍞", name: "Bread" }, { icon: "☕", name: "Coffee Grounds" },
+    ]},
+    general: { name: "General", icon: "🗑️", items: [
+      { icon: "🧦", name: "Old Cloth" }, { icon: "🧻", name: "Tissue" }, { icon: "🎈", name: "Balloon" },
+      { icon: "🧽", name: "Sponge" }, { icon: "🎨", name: "Markers" },
+    ]},
+    hazardous: { name: "Hazardous", icon: "⚠️", items: [
+      { icon: "🔋", name: "Battery" }, { icon: "🧪", name: "Chemicals" }, { icon: "💊", name: "Medicine" }, { icon: "🌡️", name: "Thermometer" },
+    ]},
+    glass: { name: "Glass", icon: "🍶", items: [ { icon: "🍷", name: "Wine Bottle" }, { icon: "🫙", name: "Jar" }, { icon: "🪟", name: "Window Glass" } ]},
+    electronic: { name: "Electronic", icon: "💻", items: [
+      { icon: "📱", name: "Phone" }, { icon: "⌨️", name: "Keyboard" }, { icon: "🖱️", name: "Mouse" }, { icon: "🎮", name: "Controller" },
+    ]},
   };
 
   // ===== TIPS =====
@@ -335,18 +199,12 @@
     totalItems: 0,
     playerName: "Player",
     items: [],
-    spawnInterval: null,
     animationId: null,
     lastSpawn: 0,
     lastUpdate: 0,
     tipIndex: 0,
     bins: [],
-    upgrades: {
-      slowMotion: false,
-      extraLife: false,
-      recyclingEducation: false,
-      binHighlight: false,
-    },
+    upgrades: { slowMotion: false, extraLife: false, recyclingEducation: false, binHighlight: false },
   };
 
   // Penalty state
@@ -364,7 +222,6 @@
   function createParticles(x, y, isSuccess = true) {
     const emojis = isSuccess ? ["✨", "⭐", "💚", "♻️"] : ["❌", "💥", "⚠️"];
     const count = isSuccess ? 15 : 10;
-
     for (let i = 0; i < count; i++) {
       const particle = document.createElement("div");
       particle.className = "particle";
@@ -372,15 +229,12 @@
       particle.style.left = x + "px";
       particle.style.top = y + "px";
       particle.style.fontSize = random(10, 20) + "px";
-
       const tx = random(-150, 150);
       const ty = random(-150, 150);
       const tr = random(-360, 360);
-
       particle.style.setProperty("--tx", tx + "px");
       particle.style.setProperty("--ty", ty + "px");
-      particle.style.setProperty(" --tr", tr + "deg");
-
+      particle.style.setProperty("--tr", tr + "deg");
       el.particleContainer.appendChild(particle);
       setTimeout(() => particle.remove(), 1000);
     }
@@ -392,17 +246,12 @@
     el.score.textContent = GAME.score;
     el.lives.textContent = "❤️".repeat(Math.max(0, GAME.lives));
     el.highScore.textContent = GAME.highScore;
-
     const percent = Math.round(GAME.landfill);
     el.landfillFill.style.width = percent + "%";
     el.landfillPercent.textContent = percent + "%";
-
     const meter = el.landfillFill.parentElement.parentElement;
-    if (GAME.landfill >= 70) {
-      meter.classList.add("danger");
-    } else {
-      meter.classList.remove("danger");
-    }
+    if (GAME.landfill >= 70) meter.classList.add("danger");
+    else meter.classList.remove("danger");
   }
 
   function rotateTip() {
@@ -414,26 +263,18 @@
   function setupBins() {
     el.binsContainer.innerHTML = "";
     GAME.bins = [];
-
     const levelConfig = LEVELS[GAME.currentLevel - 1];
-
     levelConfig.categories.forEach((category) => {
       const binData = WASTE_CATALOG[category];
       const bin = document.createElement("div");
       bin.className = `bin ${category}`;
       bin.dataset.category = category;
-
-      const examples = binData.items
-        .slice(0, 3)
-        .map((item) => item.icon)
-        .join(" ");
-
+      const examples = binData.items.slice(0, 3).map((item) => item.icon).join(" ");
       bin.innerHTML = `
         <div class="bin-icon">${binData.icon}</div>
         <div class="bin-label">${binData.name}</div>
         <div class="bin-desc">${examples}</div>
       `;
-
       el.binsContainer.appendChild(bin);
       GAME.bins.push({ element: bin, category });
     });
@@ -443,17 +284,17 @@
   function spawnItem() {
     const levelConfig = LEVELS[GAME.currentLevel - 1];
     const categories = levelConfig.categories;
-    const randomCategory =
-      categories[Math.floor(Math.random() * categories.length)];
+    const randomCategory = categories[Math.floor(Math.random() * categories.length)];
     const categoryData = WASTE_CATALOG[randomCategory];
-    const randomItem =
-      categoryData.items[Math.floor(Math.random() * categoryData.items.length)];
+    const randomItem = categoryData.items[Math.floor(Math.random() * categoryData.items.length)];
 
     const item = document.createElement("div");
     item.className = "item";
     item.textContent = randomItem.icon;
     item.dataset.category = randomCategory;
     item.dataset.name = randomItem.name;
+    item.setAttribute("role", "img");
+    item.setAttribute("aria-label", `${randomItem.name} (${WASTE_CATALOG[randomCategory].name})`);
 
     const containerWidth = el.gameArea.offsetWidth;
     const x = random(20, containerWidth - 60);
@@ -464,9 +305,7 @@
     SOUND.spawn();
 
     let fallSpeed = levelConfig.fallSpeed;
-    if (GAME.upgrades.slowMotion) {
-      fallSpeed *= 1.2;
-    }
+    if (GAME.upgrades.slowMotion) fallSpeed *= 1.2;
 
     const itemObj = {
       element: item,
@@ -483,38 +322,39 @@
     GAME.totalItems++;
   }
 
-  // ===== DRAG & DROP SYSTEM =====
+  // ===== DRAG & DROP SYSTEM (Pointer Events + Capture) =====
   function enableDrag(itemObj) {
     const item = itemObj.element;
-    let startX = 0,
-      startY = 0,
-      offsetX = 0,
-      offsetY = 0;
+    let offsetX = 0, offsetY = 0;
+    let pointerId = null;
 
     const onDown = (e) => {
-      e.preventDefault();
+      e.preventDefault(); // prevent scroll/zoom from hijacking
       if (GAME.paused || penaltyActive) return;
 
       itemObj.grabbed = true;
       item.classList.add("grabbing");
+      item.setAttribute("aria-grabbed", "true");
+
+      if (e.pointerId !== undefined && item.setPointerCapture) {
+        pointerId = e.pointerId;
+        try { item.setPointerCapture(pointerId); } catch {}
+      }
 
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
       const clientY = e.touches ? e.touches[0].clientY : e.clientY;
       const rect = item.getBoundingClientRect();
-      const gameRect = el.gameArea.getBoundingClientRect();
 
       offsetX = clientX - rect.left;
       offsetY = clientY - rect.top;
 
-      if (GAME.upgrades.binHighlight) {
-        highlightBin(itemObj.category);
-      }
-
+      if (GAME.upgrades.binHighlight) highlightBin(itemObj.category);
       SOUND.click();
     };
 
     const onMove = (e) => {
       if (!itemObj.grabbed || GAME.paused || penaltyActive) return;
+      e.preventDefault();
 
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
       const clientY = e.touches ? e.touches[0].clientY : e.clientY;
@@ -535,7 +375,12 @@
     const onUp = (e) => {
       if (!itemObj.grabbed) return;
 
-      // Check if dropped on a bin
+      if (pointerId !== null && item.releasePointerCapture) {
+        try { item.releasePointerCapture(pointerId); } catch {}
+        pointerId = null;
+      }
+
+      // Check drop target
       const itemRect = item.getBoundingClientRect();
       const itemCenterX = itemRect.left + itemRect.width / 2;
       const itemCenterY = itemRect.top + itemRect.height / 2;
@@ -554,37 +399,32 @@
         }
       }
 
-      if (droppedOnBin) {
-        handleDrop(itemObj, droppedOnBin);
-      } else {
-        // Only release grab if not dropped on a bin
-        itemObj.grabbed = false;
-        item.classList.remove("grabbing");
-      }
-
+      if (droppedOnBin) handleDrop(itemObj, droppedOnBin);
+      itemObj.grabbed = false;
+      item.classList.remove("grabbing");
+      item.removeAttribute("aria-grabbed");
       clearHighlights();
     };
 
-    item.addEventListener("pointerdown", onDown);
-    window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", onUp);
+    // Pointer events (non-passive so preventDefault works on mobile)
+    item.addEventListener("pointerdown", onDown, { passive: false });
+    document.addEventListener("pointermove", onMove, { passive: false });
+    document.addEventListener("pointerup", onUp, { passive: false });
+
+    // Touch fallback (older browsers)
     item.addEventListener("touchstart", onDown, { passive: false });
-    item.addEventListener("touchmove", onMove, { passive: false });
-    item.addEventListener("touchend", onUp, { passive: false });
+    document.addEventListener("touchmove", onMove, { passive: false });
+    document.addEventListener("touchend", onUp, { passive: false });
   }
 
   function highlightBin(category) {
     GAME.bins.forEach((bin) => {
-      if (bin.category === category) {
-        bin.element.classList.add("highlight");
-      }
+      if (bin.category === category) bin.element.classList.add("highlight");
     });
   }
 
   function clearHighlights() {
-    GAME.bins.forEach((bin) => {
-      bin.element.classList.remove("highlight");
-    });
+    GAME.bins.forEach((bin) => bin.element.classList.remove("highlight"));
   }
 
   // ===== DROP HANDLING =====
@@ -593,11 +433,8 @@
     const x = rect.left + rect.width / 2;
     const y = rect.top + rect.height / 2;
 
-    if (itemObj.category === binData.category) {
-      handleCorrect(itemObj, x, y);
-    } else {
-      handleWrong(itemObj, x, y);
-    }
+    if (itemObj.category === binData.category) handleCorrect(itemObj, x, y);
+    else handleWrong(itemObj, x, y);
 
     removeItem(itemObj);
     binData.element.classList.add("hit");
@@ -607,12 +444,10 @@
   function handleCorrect(itemObj, x, y) {
     SOUND.correct();
     createParticles(x, y, true);
-
     const points = CONFIG.BASE_POINTS * GAME.currentLevel;
     GAME.score += points;
     GAME.itemsSorted++;
     GAME.consecutiveMistakes = 0;
-
     updateHUD();
     checkLevelComplete();
   }
@@ -624,56 +459,38 @@
     setTimeout(() => el.gameArea.classList.remove("shake"), 500);
 
     let penalty = CONFIG.MISTAKE_PENALTY;
-    if (GAME.upgrades.recyclingEducation) {
-      penalty *= 0.7;
-    }
+    if (GAME.upgrades.recyclingEducation) penalty *= 0.7;
 
     GAME.landfill += penalty;
     GAME.consecutiveMistakes++;
     GAME.itemsMissed++;
 
     updateHUD();
-
-    if (GAME.consecutiveMistakes >= CONFIG.REMINDER_MISTAKES) {
-      showReminder();
-    }
-
+    if (GAME.consecutiveMistakes >= CONFIG.REMINDER_MISTAKES) showReminder();
     checkGameOver();
   }
 
   function handleMissed(itemObj) {
     SOUND.landfillHit();
-
     let penalty = CONFIG.MISTAKE_PENALTY;
-    if (GAME.upgrades.recyclingEducation) {
-      penalty *= 0.7;
-    }
-
+    if (GAME.upgrades.recyclingEducation) penalty *= 0.7;
     GAME.landfill += penalty;
     GAME.consecutiveMistakes++;
     GAME.itemsMissed++;
-
     updateHUD();
-
-    if (GAME.consecutiveMistakes >= CONFIG.REMINDER_MISTAKES) {
-      showReminder();
-    }
-
+    if (GAME.consecutiveMistakes >= CONFIG.REMINDER_MISTAKES) showReminder();
     checkGameOver();
   }
 
   function removeItem(itemObj) {
     itemObj.removed = true;
-    if (itemObj.element && itemObj.element.parentNode) {
-      itemObj.element.remove();
-    }
+    if (itemObj.element && itemObj.element.parentNode) itemObj.element.remove();
     GAME.items = GAME.items.filter((i) => i !== itemObj);
   }
 
   // ===== REMINDER POPUP =====
   function showReminder() {
     if (penaltyActive) return;
-
     penaltyActive = true;
     GAME.paused = true;
     GAME.consecutiveMistakes = 0;
@@ -681,14 +498,9 @@
     // Generate bin guide
     el.penaltyBinsGuide.innerHTML = "";
     const levelConfig = LEVELS[GAME.currentLevel - 1];
-
     levelConfig.categories.forEach((category) => {
       const binData = WASTE_CATALOG[category];
-      const examples = binData.items
-        .slice(0, 3)
-        .map((i) => i.icon)
-        .join(" ");
-
+      const examples = binData.items.slice(0, 3).map((i) => i.icon).join(" ");
       const binItem = document.createElement("div");
       binItem.className = "penalty-bin-item";
       binItem.innerHTML = `
@@ -708,13 +520,14 @@
     penaltyTimer = setInterval(() => {
       remaining--;
       el.penaltyCountdown.textContent = remaining;
-
       if (remaining <= 0) {
         clearInterval(penaltyTimer);
         el.penaltyPopup.classList.remove("active");
         penaltyActive = false;
         if (GAME.running && !checkGameOver()) {
           GAME.paused = false;
+          GAME.lastUpdate = performance.now();
+          GAME.animationId = requestAnimationFrame(gameLoop);
         }
       }
     }, 1000);
@@ -723,33 +536,27 @@
   // ===== LEVEL MANAGEMENT =====
   function checkLevelComplete() {
     const levelConfig = LEVELS[GAME.currentLevel - 1];
-    if (GAME.itemsSorted >= levelConfig.itemsToComplete) {
-      levelComplete();
-    }
+    if (GAME.itemsSorted >= levelConfig.itemsToComplete) levelComplete();
   }
 
   function levelComplete() {
     GAME.paused = true;
     cancelAnimationFrame(GAME.animationId);
-    clearInterval(GAME.spawnInterval);
     SOUND.levelUp();
 
     // Clear remaining items
-    GAME.items.forEach((item) => removeItem(item));
+    GAME.items.slice().forEach((item) => removeItem(item));
 
-    const accuracy = Math.round((GAME.itemsSorted / GAME.totalItems) * 100);
-
+    const accuracy = Math.max(0, Math.round((GAME.itemsSorted / Math.max(1, GAME.totalItems)) * 100));
     el.completedLevel.textContent = GAME.currentLevel;
     el.levelScore.textContent = GAME.score;
     el.itemsSorted.textContent = GAME.itemsSorted;
     el.accuracy.textContent = accuracy;
-
     el.levelCompleteOverlay.classList.add("active");
   }
 
   function continueToNextLevel() {
     el.levelCompleteOverlay.classList.remove("active");
-
     if (GAME.currentLevel < LEVELS.length) {
       GAME.currentLevel++;
       GAME.itemsSorted = 0;
@@ -775,26 +582,18 @@
     GAME.running = false;
     GAME.paused = false;
     cancelAnimationFrame(GAME.animationId);
-    clearInterval(GAME.spawnInterval);
     SOUND.gameOver();
 
-    // Update high score
     if (GAME.score > GAME.highScore) {
       GAME.highScore = GAME.score;
       localStorage.setItem("ecoSort2High", GAME.highScore);
       el.highScore.textContent = GAME.highScore;
     }
 
-    // Add to session high scores
-    highScores.push({
-      name: GAME.playerName,
-      score: GAME.score,
-      level: GAME.currentLevel,
-    });
+    highScores.push({ name: GAME.playerName, score: GAME.score, level: GAME.currentLevel });
     highScores.sort((a, b) => b.score - a.score);
     highScores = highScores.slice(0, 10);
 
-    // Display game over
     el.gameOverReason.textContent = reason;
     el.finalScore.textContent = GAME.score;
     el.finalLevel.textContent = GAME.currentLevel;
@@ -807,12 +606,10 @@
   // ===== HIGH SCORES =====
   function displayHighScores(container) {
     container.innerHTML = "";
-
     if (highScores.length === 0) {
       container.innerHTML = '<p class="empty">No scores yet. Be the first!</p>';
       return;
     }
-
     highScores.forEach((score, index) => {
       const item = document.createElement("div");
       item.className = "score-item";
@@ -834,9 +631,7 @@
     const levelConfig = LEVELS[GAME.currentLevel - 1];
 
     let spawnRate = levelConfig.spawnRate;
-    if (GAME.upgrades.slowMotion) {
-      spawnRate *= 1.3;
-    }
+    if (GAME.upgrades.slowMotion) spawnRate *= 1.3;
 
     if (now - GAME.lastSpawn >= spawnRate) {
       spawnItem();
@@ -844,12 +639,10 @@
     }
 
     const gameHeight = el.gameArea.offsetHeight;
-    for (const item of GAME.items) {
+    for (const item of [...GAME.items]) {
       if (item.removed || item.grabbed) continue;
-
       item.y += (item.vy * dt) / 1000;
       item.element.style.top = item.y + "px";
-
       if (item.y >= gameHeight - 50) {
         handleMissed(item);
         removeItem(item);
@@ -859,12 +652,9 @@
 
   function gameLoop(timestamp) {
     if (!GAME.running) return;
-
-    const dt = timestamp - GAME.lastUpdate || 16;
+    const dt = timestamp - (GAME.lastUpdate || timestamp);
     GAME.lastUpdate = timestamp;
-
     update(dt);
-
     GAME.animationId = requestAnimationFrame(gameLoop);
   }
 
@@ -892,22 +682,17 @@
   }
 
   function resetGame() {
-    GAME.items.forEach((item) => removeItem(item));
+    GAME.items.slice().forEach((item) => removeItem(item));
     GAME.items = [];
     GAME.currentLevel = 1;
     GAME.score = 0;
-    GAME.lives = CONFIG.INITIAL_LIVES;
+    GAME.lives = CONFIG.INITIAL_LIVES; // Lives shown as hearts in HUD (visual only)
     GAME.landfill = 0;
     GAME.consecutiveMistakes = 0;
     GAME.itemsSorted = 0;
     GAME.itemsMissed = 0;
     GAME.totalItems = 0;
-    GAME.upgrades = {
-      slowMotion: false,
-      extraLife: false,
-      recyclingEducation: false,
-      binHighlight: false,
-    };
+    GAME.upgrades = { slowMotion: false, extraLife: false, recyclingEducation: false, binHighlight: false };
 
     clearInterval(penaltyTimer);
     penaltyActive = false;
@@ -918,10 +703,8 @@
 
   function pauseGame() {
     if (!GAME.running || penaltyActive) return;
-
     GAME.paused = !GAME.paused;
     el.btnPause.textContent = GAME.paused ? "Resume" : "Pause";
-
     if (!GAME.paused) {
       GAME.lastUpdate = performance.now();
       GAME.animationId = requestAnimationFrame(gameLoop);
@@ -930,18 +713,14 @@
 
   function returnToMenu() {
     cancelAnimationFrame(GAME.animationId);
-    clearInterval(GAME.spawnInterval);
-    GAME.items.forEach((item) => removeItem(item));
-
+    GAME.items.slice().forEach((item) => removeItem(item));
     el.overlay.classList.add("active");
     el.levelCompleteOverlay.classList.remove("active");
     el.gameOverOverlay.classList.remove("active");
-
     GAME.running = false;
     GAME.paused = false;
     el.btnStart.disabled = false;
     el.btnPause.disabled = true;
-
     displayHighScores(el.previewScores);
   }
 
@@ -953,9 +732,9 @@
       { id: "upRecyclingEducation", key: "recyclingEducation" },
       { id: "upBinHighlight", key: "binHighlight" },
     ];
-
     upgrades.forEach(({ id, key }) => {
       const btn = document.getElementById(id);
+      if (!btn) return;
       const status = btn.querySelector(".u-status");
       if (GAME.upgrades[key]) {
         btn.disabled = true;
@@ -974,44 +753,20 @@
       SOUND.wrong();
       return;
     }
-
     GAME.score -= cost;
     GAME.upgrades[key] = true;
-
-    if (key === "extraLife") {
-      GAME.lives++;
-    }
-
+    if (key === "extraLife") GAME.lives++;
     SOUND.correct();
     updateHUD();
     updateUpgradesUI();
   }
 
   // ===== EVENT LISTENERS =====
-  el.btnStart.addEventListener("click", () => {
-    SOUND.click();
-    startGame();
-  });
-
-  el.overlayStart.addEventListener("click", () => {
-    SOUND.click();
-    startGame();
-  });
-
-  el.btnPause.addEventListener("click", () => {
-    SOUND.click();
-    pauseGame();
-  });
-
-  el.btnUpgrades.addEventListener("click", () => {
-    SOUND.click();
-    el.upgradePanel.classList.toggle("hidden");
-  });
-
-  el.closeUpgrades?.addEventListener("click", () => {
-    SOUND.click();
-    el.upgradePanel.classList.add("hidden");
-  });
+  el.btnStart.addEventListener("click", () => { SOUND.click(); startGame(); });
+  el.overlayStart.addEventListener("click", () => { SOUND.click(); startGame(); });
+  el.btnPause.addEventListener("click", () => { SOUND.click(); pauseGame(); });
+  el.btnUpgrades.addEventListener("click", () => { SOUND.click(); el.upgradePanel.classList.toggle("hidden"); });
+  el.closeUpgrades?.addEventListener("click", () => { SOUND.click(); el.upgradePanel.classList.add("hidden"); });
 
   el.btnMute.addEventListener("click", () => {
     const enabled = SOUND.toggle();
@@ -1020,68 +775,30 @@
     if (enabled) SOUND.click();
   });
 
-  el.btnContinueLevel.addEventListener("click", () => {
-    SOUND.click();
-    continueToNextLevel();
-  });
-
-  el.btnPlayAgain.addEventListener("click", () => {
-    SOUND.click();
-    el.gameOverOverlay.classList.remove("active");
-    startGame();
-  });
-
-  el.btnMainMenu.addEventListener("click", () => {
-    SOUND.click();
-    returnToMenu();
-  });
+  el.btnContinueLevel.addEventListener("click", () => { SOUND.click(); continueToNextLevel(); });
+  el.btnPlayAgain.addEventListener("click", () => { SOUND.click(); el.gameOverOverlay.classList.remove("active"); startGame(); });
+  el.btnMainMenu.addEventListener("click", () => { SOUND.click(); returnToMenu(); });
 
   // Upgrade purchases
-  document.getElementById("upSlowMotion")?.addEventListener("click", () => {
-    purchaseUpgrade("slowMotion", 500);
-  });
+  document.getElementById("upSlowMotion")?.addEventListener("click", () => purchaseUpgrade("slowMotion", 500));
+  document.getElementById("upExtraLife")?.addEventListener("click", () => purchaseUpgrade("extraLife", 800));
+  document.getElementById("upRecyclingEducation")?.addEventListener("click", () => purchaseUpgrade("recyclingEducation", 600));
+  document.getElementById("upBinHighlight")?.addEventListener("click", () => purchaseUpgrade("binHighlight", 400));
 
-  document.getElementById("upExtraLife")?.addEventListener("click", () => {
-    purchaseUpgrade("extraLife", 800);
-  });
-
-  document
-    .getElementById("upRecyclingEducation")
-    ?.addEventListener("click", () => {
-      purchaseUpgrade("recyclingEducation", 600);
-    });
-
-  document.getElementById("upBinHighlight")?.addEventListener("click", () => {
-    purchaseUpgrade("binHighlight", 400);
-  });
-
-  // Keyboard shortcuts (1-6 for quick sorting)
+  // Keyboard shortcuts (1-6 for quick sorting) + pause
   window.addEventListener("keydown", (e) => {
-    if (penaltyActive || GAME.paused || !GAME.running) return;
+    if (penaltyActive || GAME.paused || !GAME.running) {
+      if ((e.key === " " || e.key === "Escape") && GAME.running) { e.preventDefault(); pauseGame(); }
+      return;
+    }
 
-    const keyMap = {
-      1: 0,
-      2: 1,
-      3: 2,
-      4: 3,
-      5: 4,
-      6: 5,
-    };
-
+    const keyMap = { 1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5 };
     if (keyMap[e.key] !== undefined && GAME.bins[keyMap[e.key]]) {
-      const nearestItem = GAME.items
-        .filter((i) => !i.grabbed && !i.removed)
-        .sort((a, b) => b.y - a.y)[0];
-
-      if (nearestItem) {
-        handleDrop(nearestItem, GAME.bins[keyMap[e.key]]);
-      }
+      const nearestItem = GAME.items.filter((i) => !i.grabbed && !i.removed).sort((a, b) => b.y - a.y)[0];
+      if (nearestItem) handleDrop(nearestItem, GAME.bins[keyMap[e.key]]);
     }
 
-    if (e.key === " " || e.key === "Escape") {
-      e.preventDefault();
-      pauseGame();
-    }
+    if (e.key === " " || e.key === "Escape") { e.preventDefault(); pauseGame(); }
   });
 
   // Rotate tips
@@ -1091,8 +808,6 @@
   updateHUD();
   updateUpgradesUI();
   displayHighScores(el.previewScores);
-
-  // Sync mute button
   const enabled = SOUND.enabled;
   el.btnMute.setAttribute("aria-pressed", enabled ? "true" : "false");
   el.btnMute.textContent = enabled ? "🔊 Sound" : "🔇 Sound";
