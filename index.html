@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Eco Sort 2: Waste Management & Recycling</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <!-- Sticky Top Bar -->
+    <header class="topbar">
+      <div class="brand">
+        <span class="logo">♻️</span>
+        <div>
+          <h1>Eco Sort 2</h1>
+          <small class="subtitle">Sort smart. Save the planet.</small>
+        </div>
+      </div>
+
+      <div class="stats">
+        <div class="stat">
+          <label>Level</label>
+          <span id="level">1</span>
+        </div>
+        <div class="stat">
+          <label>Score</label>
+          <span id="score">0</span>
+        </div>
+        <div class="stat">
+          <label>Lives</label>
+          <span id="lives">❤️❤️❤️</span>
+        </div>
+        <div class="stat">
+          <label>High Score</label>
+          <span id="highScore">0</span>
+        </div>
+        <div class="meter">
+          <label>Landfill</label>
+          <div class="bar">
+            <div id="landfillFill" class="fill"></div>
+          </div>
+          <span id="landfillPercent" class="percent">0%</span>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button id="btnStart" class="primary">Start</button>
+        <button id="btnPause" class="ghost" disabled>Pause</button>
+        <button id="btnUpgrades" class="accent">Upgrades</button>
+        <button
+          id="btnMute"
+          class="ghost"
+          aria-pressed="true"
+          title="Toggle sound"
+        >
+          🔊 Sound
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Game Stage -->
+    <main class="stage">
+      <!-- Game Area -->
+      <div id="gameArea" class="game-area" aria-label="Game area">
+        <!-- Falling items will be spawned here -->
+      </div>
+
+      <!-- Bins Container (Dynamic based on level) -->
+      <div id="binsContainer" class="bins" aria-label="Waste bins">
+        <!-- Bins will be generated dynamically -->
+      </div>
+
+      <!-- Tips Section -->
+      <div class="tips" aria-live="polite">
+        <span id="tipText"
+          >Drag items into the correct bins to prevent landfill overflow!</span
+        >
+      </div>
+    </main>
+
+    <!-- Upgrades Panel (Slide-in from right) -->
+    <aside
+      id="upgradePanel"
+      class="upgrades hidden"
+      aria-label="Upgrades panel"
+    >
+      <button class="close-btn" id="closeUpgrades" aria-label="Close upgrades">
+        ✕
+      </button>
+      <h2>🔧 Upgrades</h2>
+      <p>Purchase upgrades with your points to improve your sorting systems!</p>
+
+      <div class="upgrade-list">
+        <button class="upgrade" id="upSlowMotion" data-cost="500">
+          <div class="u-icon">⏱️</div>
+          <div class="u-content">
+            <div class="u-title">Slow Motion</div>
+            <div class="u-desc">Reduce fall speed by 20%</div>
+            <div class="u-meta">
+              <span class="u-status" data-id="statusSlowMotion">Available</span>
+              <span class="u-cost">Cost: <strong>500</strong> pts</span>
+            </div>
+          </div>
+        </button>
+
+        <button class="upgrade" id="upExtraLife" data-cost="800">
+          <div class="u-icon">❤️</div>
+          <div class="u-content">
+            <div class="u-title">Extra Life</div>
+            <div class="u-desc">Add one extra life</div>
+            <div class="u-meta">
+              <span class="u-status" data-id="statusExtraLife">Available</span>
+              <span class="u-cost">Cost: <strong>800</strong> pts</span>
+            </div>
+          </div>
+        </button>
+
+        <button class="upgrade" id="upRecyclingEducation" data-cost="600">
+          <div class="u-icon">📚</div>
+          <div class="u-content">
+            <div class="u-title">Recycling Education</div>
+            <div class="u-desc">Reduce mistake penalty by 30%</div>
+            <div class="u-meta">
+              <span class="u-status" data-id="statusRecyclingEducation"
+                >Available</span
+              >
+              <span class="u-cost">Cost: <strong>600</strong> pts</span>
+            </div>
+          </div>
+        </button>
+
+        <button class="upgrade" id="upBinHighlight" data-cost="400">
+          <div class="u-icon">💡</div>
+          <div class="u-content">
+            <div class="u-title">Bin Highlight</div>
+            <div class="u-desc">Highlight correct bin when item selected</div>
+            <div class="u-meta">
+              <span class="u-status" data-id="statusBinHighlight"
+                >Available</span
+              >
+              <span class="u-cost">Cost: <strong>400</strong> pts</span>
+            </div>
+          </div>
+        </button>
+      </div>
+
+      <small class="note"
+        >Upgrades persist for this run. Improve systems to prevent
+        overflow!</small
+      >
+    </aside>
+
+    <!-- Start/Welcome Overlay -->
+    <div id="overlay" class="overlay active">
+      <div class="panel welcome-panel">
+        <h1 class="welcome-title">🌍 Eco Sort 2</h1>
+        <h2>Waste Management Challenge</h2>
+        <p class="lead">
+          Drag falling waste into correct bins, upgrade recycling systems, and
+          prevent landfill overflow!
+        </p>
+
+        <div class="instructions">
+          <h3>How to Play:</h3>
+          <ul class="legend">
+            <li>
+              ♻️ <strong>Recyclable</strong> – Paper, plastic bottles, cans,
+              cardboard
+            </li>
+            <li>
+              🌱 <strong>Organic</strong> – Food scraps, leaves, garden waste
+            </li>
+            <li>🗑️ <strong>General</strong> – Non-recyclable mixed waste</li>
+            <li>
+              ⚠️ <strong>Hazardous</strong> – Batteries, chemicals, medicine
+              (Level 3+)
+            </li>
+            <li>
+              🍶 <strong>Glass</strong> – Bottles, jars, window glass (Level 4+)
+            </li>
+            <li>
+              💻 <strong>Electronic</strong> – Phones, computers (Level 5)
+            </li>
+          </ul>
+          <p class="tip">
+            💡 Drag items into bins or use keyboard: 1-6 for quick sorting!
+          </p>
+        </div>
+
+        <div class="player-input">
+          <label for="playerName">Enter Your Name:</label>
+          <input
+            type="text"
+            id="playerName"
+            placeholder="Player"
+            maxlength="20"
+          />
+        </div>
+
+        <div class="overlay-actions">
+          <button id="overlayStart" class="primary large">Start Game</button>
+        </div>
+
+        <div id="leaderboardPreview" class="leaderboard-preview">
+          <h3>🏆 High Scores</h3>
+          <div id="previewScores" class="score-list">
+            <p class="empty">No scores yet. Be the first!</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Level Complete Overlay -->
+    <div id="levelCompleteOverlay" class="overlay hidden">
+      <div class="panel">
+        <h2>🎉 Level <span id="completedLevel">1</span> Complete!</h2>
+        <div class="level-stats">
+          <p>Score: <strong id="levelScore">0</strong></p>
+          <p>Items Sorted: <strong id="itemsSorted">0</strong></p>
+          <p>Accuracy: <strong id="accuracy">0</strong>%</p>
+        </div>
+        <div class="overlay-actions">
+          <button id="btnContinueLevel" class="primary">Continue</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Penalty Pop-up (3 consecutive mistakes) -->
+    <div id="penaltyPopup" class="popup hidden" role="dialog" aria-modal="true">
+      <div class="panel penalty-panel">
+        <h3 id="penaltyTitle">⚠️ Sorting Reminder</h3>
+        <p id="penaltyBody">Take a moment to review the correct bins:</p>
+        <div id="penaltyBinsGuide" class="penalty-bins">
+          <!-- Bin guide will be generated here -->
+        </div>
+        <p class="countdown">
+          Resuming in <strong id="penaltyCountdown">3</strong> seconds…
+        </p>
+      </div>
+    </div>
+
+    <!-- Game Over Overlay -->
+    <div id="gameOverOverlay" class="overlay hidden">
+      <div class="panel">
+        <h2 class="game-over-title">Game Over</h2>
+        <p id="gameOverReason" class="game-over-reason"></p>
+
+        <div class="final-stats">
+          <h3>Final Results</h3>
+          <p>
+            Final Score: <strong id="finalScore" class="highlight">0</strong>
+          </p>
+          <p>Highest Level: <strong id="finalLevel">1</strong></p>
+          <p>Total Sorted: <strong id="totalItemsSorted">0</strong></p>
+        </div>
+
+        <div class="leaderboard">
+          <h3>🏆 High Scores</h3>
+          <div id="highScoresList" class="score-list">
+            <!-- High scores will be populated here -->
+          </div>
+        </div>
+
+        <div class="overlay-actions">
+          <button id="btnPlayAgain" class="primary">Play Again</button>
+          <button id="btnMainMenu" class="ghost">Main Menu</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Audio Elements (silent fallback) -->
+    <audio id="bgMusic" loop></audio>
+    <audio id="correctSound"></audio>
+    <audio id="errorSound"></audio>
+    <audio id="levelUpSound"></audio>
+    <audio id="gameOverSound"></audio>
+
+    <!-- Particle Effects Container -->
+    <div id="particleContainer" class="particle-container"></div>
+
+    <footer class="footer">
+      <small>
+        Made for learning: waste segregation & recycling systems to reduce
+        landfill overflow. 🌍
+      </small>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>
